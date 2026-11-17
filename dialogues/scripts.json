@@ -1,0 +1,57 @@
+{
+  "a": [
+    {"id": "d01", "family": "timer", "turns": [
+      "Start a ten minute timer for the tea.",
+      "Actually make it fifteen.",
+      "How long is left?"]},
+    {"id": "d02", "family": "timer", "turns": [
+      "Set a timer for five minutes for the eggs.",
+      "Set another timer for twenty minutes for the laundry.",
+      "What timers do I have?",
+      "Cancel the eggs timer."]},
+    {"id": "d03", "family": "timer", "turns": [
+      "Remind me to water the plants.",
+      "Six in the evening.",
+      "What reminders do I have?"]},
+    {"id": "d04", "family": "lookup", "turns": [
+      "What time does the cafe close on Saturdays?",
+      "Where can I print, and how much is it?",
+      "Is there a swimming pool?"]},
+    {"id": "d05", "family": "booking", "turns": [
+      "I need a room on Thursday afternoon.",
+      "Five.",
+      "A projector.",
+      "Yes, under the name Sam."]},
+    {"id": "d06", "family": "booking", "turns": [
+      "Can I get a room for fifteen people with a whiteboard?",
+      "Maple Hall is fine. Wednesday at two.",
+      "Yes, the name is Jordan."]}
+  ],
+  "b": [
+    {"id": "d07", "family": "timer", "turns": [
+      "Set a timer for the pasta.",
+      "Twelve minutes.",
+      "Add three more minutes.",
+      "How much time is left?"]},
+    {"id": "d08", "family": "timer", "turns": [
+      "Remind me to call the dentist at nine in the morning.",
+      "Also remind me to pick up the laundry at four thirty in the afternoon.",
+      "What reminders do I have?",
+      "Cancel the dentist reminder."]},
+    {"id": "d09", "family": "lookup", "turns": [
+      "What are the opening hours on Sunday?",
+      "How much is a day locker, and where are they?",
+      "How long can I borrow a laptop?",
+      "Do you have a gym?"]},
+    {"id": "d10", "family": "booking", "turns": [
+      "A quiet room for two people on Monday at noon.",
+      "Make it three people instead.",
+      "Okay, Tuesday at eleven then.",
+      "Yes, book it under Maria."]},
+    {"id": "d11", "family": "booking", "turns": [
+      "I'd like to book a room for Friday morning.",
+      "Eight people.",
+      "We need a projector and a whiteboard.",
+      "Yes please, under the name Alex."]}
+  ]
+}
