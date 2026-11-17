@@ -14,6 +14,7 @@ import queue
 import re
 import sys
 import threading
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Callable, Iterator
@@ -126,6 +127,7 @@ class ChatClient:
     def __init__(self, base_url: str, model: str) -> None:
         self.url = base_url.rstrip("/") + "/chat/completions"
         self.model = model
+        self.schema_supported = True
 
     def _open(self, messages: list[dict], max_tokens: int, **options):
         body = {
@@ -144,10 +146,25 @@ class ChatClient:
 
     def complete_json(self, messages: list[dict], schema: dict, max_tokens: int = 80) -> dict:
         """Return the JSON object the model wrote under the schema, or {} if it is not valid JSON."""
-        response_format = {"type": "json_schema", "json_schema": {"name": "action", "schema": schema}}
+        options = {}
 
-        with self._open(messages, max_tokens, response_format=response_format) as response:
-            text = json.load(response)["choices"][0]["message"]["content"] or ""
+        if self.schema_supported:
+            options["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "action", "schema": schema},
+            }
+
+        try:
+            with self._open(messages, max_tokens, **options) as response:
+                text = json.load(response)["choices"][0]["message"]["content"] or ""
+
+        except urllib.error.HTTPError as error:
+            if not options or error.code != 400:
+                raise
+
+            # A server without schema-constrained output: the prompt alone still asks for JSON.
+            self.schema_supported = False
+            return self.complete_json(messages, schema, max_tokens)
 
         try:
             value = json.loads(text[text.index("{") : text.rindex("}") + 1])
