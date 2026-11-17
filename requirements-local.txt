@@ -1,0 +1,5 @@
+# For a laptop (recording, the live demo, the figure). The image on PACE-ICE uses recipe/requirements.txt.
+faster-whisper==1.2.1
+piper-tts==1.8.0
+matplotlib==3.11.2
+sounddevice==0.5.6
