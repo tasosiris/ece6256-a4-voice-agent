@@ -7,6 +7,7 @@ invent a room or break a constraint.
 
 from __future__ import annotations
 
+import datetime
 import difflib
 import json
 import re
@@ -15,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+from nlu import DAYS, ONES, TENS, extract
 
 # Hours a part of the day covers, as [first, last).
 PERIODS = {"morning": (0, 12), "afternoon": (12, 17), "evening": (17, 24)}
@@ -37,47 +38,25 @@ INTENTS = (
     "other",
 )
 
+# What the LLM is asked for. Every other value is read from the transcript by nlu.extract.
 ACTION_SCHEMA = {
     "type": "object",
     "properties": {
         "intent": {"type": "string", "enum": list(INTENTS)},
-        "hours": {"type": "integer"},
-        "minutes": {"type": "integer"},
-        "seconds": {"type": "integer"},
-        "mode": {"type": "string", "enum": ["set", "add"]},
         "label": {"type": "string"},
-        "what": {"type": "string", "enum": ["timers", "reminders", "all"]},
-        "time": {"type": "string"},
-        "period": {"type": "string", "enum": list(PERIODS)},
-        "day": {"type": "string", "enum": list(DAYS)},
-        "people": {"type": "integer"},
-        "features": {"type": "array", "items": {"type": "string"}},
-        "room": {"type": "string"},
         "name": {"type": "string"},
-        "confirm": {"type": "string", "enum": ["yes", "no"]},
+        "room": {"type": "string"},
+        "features": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["intent"],
     "additionalProperties": False,
 }
 
-FEATURE_ALIASES = {
-    "tv": "tv screen",
-    "television": "tv screen",
-    "screen": "tv screen",
-    "monitor": "tv screen",
-    "white board": "whiteboard",
-    "video call": "video call kit",
-    "video conferencing": "video call kit",
-    "video conference": "video call kit",
-    "mic": "microphone",
-    "silent": "quiet",
-}
+# Intents that a short answer to the agent's own question can be mistaken for.
+VAGUE_INTENTS = ("other", "booking", "timer_set", "timer_change", "timer_check", "reminder_set")
 
-ONES = (
-    "zero one two three four five six seven eight nine ten eleven twelve thirteen "
-    "fourteen fifteen sixteen seventeen eighteen nineteen"
-).split()
-TENS = "zero ten twenty thirty forty fifty sixty seventy eighty ninety".split()
+BOOKING_SLOTS = ("people", "day", "time", "period", "features", "room", "confirm", "name", "number", "nothing")
+
 ORDINALS = {1: "first", 2: "second", 3: "third"}
 
 IGNORED_LABEL_WORDS = {"the", "a", "an", "my", "to", "for", "timer", "reminder", "one", "it"}
@@ -180,11 +159,7 @@ def whole_number(value: object) -> int:
 
 
 def duration_seconds(action: dict) -> int:
-    return (
-        whole_number(action.get("hours")) * 3600
-        + whole_number(action.get("minutes")) * 60
-        + whole_number(action.get("seconds"))
-    )
+    return whole_number(action.get("seconds"))
 
 
 def label_words(label: str | None) -> set[str]:
@@ -247,23 +222,124 @@ class Booking:
     name: str | None = None
     proposal: tuple[dict, str, str] | None = None  # room, day, time waiting for a yes
     accepted: bool = False
-    asked_features: bool = False
+    question: str | None = None  # what the agent just asked: when, people, features, confirm, name
 
 
 class Dialogue:
     """One conversation. `handle` applies an action and returns what to tell the user, or None when
     the LLM should answer by itself from the knowledge base (lookup and small talk)."""
 
-    def __init__(self, kb_path: Path, now: Callable[[], float] = time.monotonic) -> None:
+    def __init__(
+        self, kb_path: Path, now: Callable[[], float] = time.monotonic, today: int | None = None
+    ) -> None:
         self.kb = json.loads(Path(kb_path).read_text(encoding="utf-8"))
         self.rooms = self.kb["rooms"]
         self.known_features = sorted({f for room in self.rooms for f in room["features"]})
         self.now = now
+        self.today = datetime.date.today().weekday() if today is None else today
         self.timers: list[Timer] = []
         self.reminders: list[Reminder] = []
         self.booking = Booking()
         self.booked: list[tuple[dict, str, str, str]] = []  # room, day, time, name
         self.pending: dict | None = None
+
+    def interpret(self, transcript: str, llm_action: dict) -> dict:
+        """Build the action from the LLM's intent and labels plus the values the rules read."""
+        slots = extract(transcript, self.known_features, [room["id"] for room in self.rooms], self.today)
+        text = slots["text"]
+        booking = self.booking
+        intent = llm_action.get("intent") if llm_action.get("intent") in INTENTS else "other"
+
+        def said(value: object) -> str | None:
+            """Keep a free-text value from the LLM only if the user actually said it."""
+            value = str(value or "").strip(" .")
+            return value if value and re.sub(r"[^a-z0-9' ]", "", value.lower()) in text else None
+
+        label = said(llm_action.get("label"))
+
+        # A short answer takes its meaning from the question, whatever the LLM made of it.
+        if "timer" in text or "remind" in text or intent not in VAGUE_INTENTS:
+            pass
+
+        elif self.pending:
+            asked = self.pending["intent"]
+
+            if asked.startswith("timer") and ("seconds" in slots or "number" in slots):
+                intent = asked
+            elif asked == "reminder_set" and ("time" in slots or "number" in slots or intent == "other"):
+                intent = asked
+            elif asked.endswith("cancel") and intent == "other":
+                intent = asked
+
+        elif booking.question == "name":
+            intent = "booking"
+
+        elif "seconds" not in slots and any(key in slots for key in BOOKING_SLOTS):
+            if booking.question or (booking != Booking() and intent in ("other", "timer_change")):
+                intent = "booking"
+
+        action: dict = {"intent": intent}
+        number = slots.get("number")
+
+        if intent.startswith("timer") or intent == "reminder_cancel":
+            items = self.reminders if intent == "reminder_cancel" else self.timers
+            words = set(text.split())
+
+            # "Cancel the eggs one" names a timer even when the LLM gave no label.
+            if not label:
+                label = next((item.name for item in items if label_words(item.name) & label_words(text)), None)
+
+            action["label"] = label or ("all" if words & {"all", "every", "everything"} else None)
+            action["seconds"] = slots.get("seconds") or (number or 0) * 60
+            action["mode"] = slots["mode"]
+
+        elif intent == "reminder_set":
+            action["label"] = label
+            action["time"] = slots.get("time")
+            action["day"] = slots.get("day")
+
+            if action["time"] is None and number is not None and number < 24:
+                action["time"] = f"{number + 12 if 1 <= number <= 6 else number}:00"
+
+        elif intent == "list":
+            action["what"] = slots["what"]
+
+        elif intent == "booking":
+            for key in ("day", "time", "period", "people", "confirm"):
+                action[key] = slots.get(key)
+
+            if number is not None:
+                if booking.question == "when" and number < 24:
+                    action["time"] = f"{number}:00"
+                elif action["people"] is None:
+                    action["people"] = number
+
+            current = booking.features or []
+            wanted = slots.get("features") or [
+                str(f) for f in llm_action.get("features") or [] if said(f) and f not in current
+            ]
+            dropped = slots.get("dropped_features", [])
+
+            if wanted or dropped:
+                kept = [] if slots.get("only_features") else current
+                action["features"] = [f for f in kept + wanted if f not in dropped]
+
+            elif slots.get("nothing"):
+                action["features"] = []
+
+            elif booking.question == "features" and slots.get("confirm") == "no":
+                # "No" in answer to "Do you need any equipment?" declines equipment, not a booking.
+                action["features"], action["confirm"] = [], None
+
+            action["room"] = slots.get("room") or said(llm_action.get("room"))
+            action["name"] = slots.get("name") or said(llm_action.get("name"))
+
+            if booking.question == "name" and not action["name"]:
+                opener = r"^(?:(?:it's|it is|my name is|the name is|name is|under|for|yes|sure|okay)[, ]+)+"
+                rest = re.sub(opener, "", transcript.strip(" .!"), flags=re.I)
+                action["name"] = rest if 0 < len(rest.split()) <= 3 else None
+
+        return {key: value for key, value in action.items() if value is not None}
 
     def handle(self, action: dict) -> str | None:
         intent = action.get("intent")
@@ -342,10 +418,13 @@ class Dialogue:
             self.pending = {"intent": "timer_set", "label": label}
             return f"How long should the {label + ' ' if label else ''}timer be?"
 
-        self.timers.append(Timer(label, seconds, self.now()))
-        length = capitalize(say_duration(seconds))
+        timer = Timer(label, seconds, self.now())
+        self.timers.append(timer)
 
-        return f"{length} for the {label}, starting now." if label else f"{length} timer, starting now."
+        if label:
+            return f"{capitalize(say_duration(seconds))} for the {label}, starting now."
+
+        return f"{capitalize(timer.name)} timer, starting now."
 
     def _timer_change(self, action: dict) -> str:
         label = clean_label(action.get("label"))
@@ -373,7 +452,10 @@ class Dialogue:
         timer.seconds = seconds
         length = capitalize(say_duration(seconds))
 
-        return f"Changed. {length} for the {timer.label}." if timer.label else f"Changed. {length} timer."
+        if timer.label:
+            return f"Changed. {length} for the {timer.label}."
+
+        return f"Changed. {capitalize(timer.name)} timer."
 
     def _timer_check(self, action: dict) -> str:
         label = clean_label(action.get("label"))
@@ -554,10 +636,7 @@ class Dialogue:
         if isinstance(action.get("features"), list):
             booking.features = self._normalize_features(action["features"])
 
-        elif booking.asked_features and action.get("confirm") == "no" and booking.features is None:
-            # "No" in answer to "Do you need any equipment?"
-            booking.features = []
-            action = {**action, "confirm": None}
+        booking.question = None
 
         if action.get("room"):
             room = self._find_room(action["room"])
@@ -582,7 +661,7 @@ class Dialogue:
 
         elif booking.proposal:
             if action.get("confirm") == "no":
-                booking.proposal, booking.accepted = None, False
+                booking.proposal, booking.accepted, booking.question = None, False, "when"
                 return "Okay, I have not booked it. Would you like a different room, day or time?"
 
             if action.get("confirm") == "yes" or action.get("name"):
@@ -590,6 +669,7 @@ class Dialogue:
 
             if booking.accepted:
                 if not booking.name:
+                    booking.question = "name"
                     return "Under what name should I book it?"
 
                 room, day, hhmm = booking.proposal
@@ -635,7 +715,11 @@ class Dialogue:
             )
 
             if not candidates:
+                booking.question = "people"
                 return self._nothing_fits()
+
+        # Unless a branch below says otherwise, the next answer is about the day or the time.
+        booking.question = "when"
 
         if not booking.day and not (booking.time or booking.period):
             return "Which day and time would you like?"
@@ -647,17 +731,18 @@ class Dialogue:
             return f"What time on {booking.day.capitalize()}?"
 
         if booking.people is None:
+            booking.question = "people"
             return "How many people?"
 
         if booking.features is None and not booking.room:
-            booking.asked_features = True
+            booking.question = "features"
             return "Do you need any equipment?"
 
         for room in candidates:
             slots = [hhmm for hhmm in self._free(room, booking.day) if self._time_wanted(hhmm)]
 
             if slots:
-                booking.proposal = (room, booking.day, slots[0])
+                booking.proposal, booking.question = (room, booking.day, slots[0]), "confirm"
                 return (
                     f"{room['name']} on the {ORDINALS[room['floor']]} floor is free on "
                     f"{booking.day.capitalize()} at {say_time(slots[0])}. "
@@ -786,7 +871,6 @@ class Dialogue:
 
         for feature in features:
             text = str(feature).lower().strip(" .")
-            text = FEATURE_ALIASES.get(text, text)
 
             if text in ("", "no", "none", "nothing"):
                 continue
