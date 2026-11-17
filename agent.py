@@ -87,6 +87,7 @@ RELAY_PROMPT = (
 RELAY_EXAMPLES = (
     "How many people?",
     "Ten minutes for the tea, starting now.",
+    "Booked. Elm Room, Monday at one in the afternoon, for Dana.",
     "Birch Room on the first floor is free on Friday at ten in the morning. It holds four. Shall I book it?",
 )
 
@@ -394,6 +395,10 @@ class VoiceAgent:
         reply = reply.strip()
         self.history = (self.history + [(transcript, reply)])[-HISTORY_EXCHANGES:]
         extras["reply"] = reply
+
+        if result is not None:
+            # Whether the LLM spoke the task logic's reply word for word.
+            extras["relay_exact"] = reply == result
 
         return extras
 
