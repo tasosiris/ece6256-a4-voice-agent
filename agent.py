@@ -416,6 +416,10 @@ def run_session(settings: argparse.Namespace) -> None:
     if not recordings:
         sys.exit(f"No .wav files under {settings.recordings_directory}")
 
+    # The shim appends to a trace, so a second run into the same folder would mix two runs.
+    if (Path(settings.output_directory) / "trace.jsonl").exists():
+        sys.exit(f"{settings.output_directory} already holds a trace; choose a new output directory")
+
     agent = VoiceAgent(settings)
     agent.warm_up()
 

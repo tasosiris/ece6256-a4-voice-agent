@@ -1,7 +1,6 @@
 #!/bin/bash
 #
-# Template: run your agent once on one H100 node of PACE-ICE, against an LLM served on the same node.
-# Copy it to the root of your repository and edit the "Your settings" block and the last command.
+# Run the agent once on one H100 node of PACE-ICE, against an LLM served on the same node.
 #
 # Build the image once, from the root of your repository, on a login node. Images are big, so keep the
 # Apptainer cache and the image in a folder with space, not in your home directory. Pick that folder first
@@ -14,7 +13,8 @@
 #
 # Run it, from the root of your repository:
 #   sbatch run_agent.sbatch
-#   sbatch --export=ALL,LLM_MODEL=openai/gpt-oss-20b run_agent.sbatch
+#   sbatch --export=ALL,RECORDINGS_DIR=my_dialogues run_agent.sbatch
+#   sbatch --export=ALL,LLM_MODEL=meta-llama/Llama-3.2-3B-Instruct,AGENT_ARGS="--asr-beam-size 1" run_agent.sbatch
 
 #SBATCH --job-name=a4-agent
 #SBATCH --gres=gpu:H100:1
@@ -28,9 +28,11 @@ set -euo pipefail
 # ---- Your settings ---------------------------------------------------------------------------
 SCRATCH_DIR="${SCRATCH_DIR:-$HOME/scratch}"
 IMAGE="${IMAGE:-$SCRATCH_DIR/agent.sif}"
-LLM_MODEL="${LLM_MODEL:-meta-llama/Llama-3.2-3B-Instruct}"
-RECORDINGS_DIR="${RECORDINGS_DIR:-my_recordings}"
+LLM_MODEL="${LLM_MODEL:-meta-llama/Llama-3.1-8B-Instruct}"
+RECORDINGS_DIR="${RECORDINGS_DIR:-recordings}"
 OUTPUT_DIR="${OUTPUT_DIR:-run_output/${SLURM_JOB_ID}}"
+# Extra options for agent.py, for example "--asr-beam-size 1 --no-clause-split".
+AGENT_ARGS="${AGENT_ARGS:-}"
 # ----------------------------------------------------------------------------------------------
 
 REPO_ROOT="${SLURM_SUBMIT_DIR}"
@@ -117,11 +119,19 @@ apptainer exec --nv \
     --env PYTHONNOUSERSITE=1 \
     --env OMP_NUM_THREADS="${CPU_COUNT}" \
     "${IMAGE}" \
-    python3 /work/your_agent.py \
+    python3 /work/agent.py \
     --recordings-directory "/work/${RECORDINGS_DIR}" \
     --output-directory "/work/${OUTPUT_DIR}" \
     --llm-model "${LLM_MODEL}" \
     --llm-base-url "http://127.0.0.1:${PORT}/v1" \
-    --cpu-count "${CPU_COUNT}"
-# ^ Replace your_agent.py and its arguments with your own. The model name and the server URL must reach
-#   your agent as settings like these, never as constants in the code.
+    --cpu-count "${CPU_COUNT}" \
+    ${AGENT_ARGS}
+
+# ---- Check the trace and print the numbers ---------------------------------------------------------
+# Both scripts use the standard library only.
+python3 waterfall.py --trace "${OUTPUT_DIR}/trace.jsonl" || true
+
+if [ -f "${RECORDINGS_DIR}/references.json" ]; then
+    python3 wer/score_wer.py --trace "${OUTPUT_DIR}/trace.jsonl" \
+        --references "${RECORDINGS_DIR}/references.json" || true
+fi
