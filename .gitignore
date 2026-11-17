@@ -4,3 +4,4 @@ __pycache__/
 *.sif
 vllm-*.log
 a4-agent-*.out
+.venv/
