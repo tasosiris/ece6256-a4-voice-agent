@@ -108,6 +108,9 @@ python3 agent.py --llm-model llama3.1:8b --llm-base-url http://127.0.0.1:11434/v
     --recordings-directory recordings --output-directory run_output/laptop
 ```
 
+`demo.py` shows a line to say before every turn, chosen from what the agent just asked, and walks
+through one timer, one lookup and one booking; `--no-guide` hides this.
+
 The first run downloads the ASR and TTS weights from Hugging Face. Laptop timings are not the
 reported ones.
 
