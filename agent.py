@@ -91,6 +91,10 @@ RELAY_EXAMPLES = (
     "Birch Room on the first floor is free on Friday at ten in the morning. It holds four. Shall I book it?",
 )
 
+# Said when nothing was heard. It must not ask the user to repeat: the model that relays it took
+# "Could you say it again?" as an instruction and spoke its previous example instead.
+NOT_HEARD = "Sorry, I did not catch that."
+
 ANSWER_PROMPT = (
     VOICE_STYLE + " Answer only from the knowledge base below. Never guess: if it does not hold the "
     "answer, do not say yes or no: say only that you don't have anything about it, and name "
@@ -340,7 +344,7 @@ class VoiceAgent:
             action = self.dialogue.interpret(transcript, self.route(transcript))
             result = self.dialogue.handle(action)
         else:
-            action, result = {}, "Sorry, I did not catch that. Could you say it again?"
+            action, result = {}, NOT_HEARD
 
         extras = {
             "transcript": transcript,
