@@ -73,6 +73,14 @@ python3 wer/score_wer.py --trace run_output/<job id>/trace.jsonl --references re
 The run the report uses is `run_output/7153569/` (trace, spoken replies, and the job's log as
 `job.out`), measured at the commit before the one that added it; `report/waterfall.png` is drawn from it.
 
+Three more runs of the same 40 recordings, each changing one setting:
+
+| Run | Change | Command |
+|---|---|---|
+| `run_output/7153830/` | Whisper beam size 1 | `sbatch --export=ALL,AGENT_ARGS="--asr-beam-size 1" run_agent.sbatch` |
+| `run_output/7153831/` | first piece not cut at a comma | `sbatch --export=ALL,AGENT_ARGS="--no-clause-split" run_agent.sbatch` |
+| `run_output/7153832/` | Llama 3.2 3B | `sbatch --export=ALL,LLM_MODEL=meta-llama/Llama-3.2-3B-Instruct run_agent.sbatch` |
+
 `waterfall.py` lists every turn the checker rejects, prints the p50 and p95 table of the report from
 `voice_kit.summarize_stages`, splits the LLM-side stages with the agent's extra stamps, and draws
 the figure. The table needs only the standard library; the figure needs matplotlib.
