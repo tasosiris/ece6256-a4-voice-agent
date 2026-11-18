@@ -34,6 +34,9 @@ export SCRATCH_DIR=$HOME/scratch
 export APPTAINER_CACHEDIR=$SCRATCH_DIR/cache APPTAINER_TMPDIR=$SCRATCH_DIR/tmp
 mkdir -p "$APPTAINER_CACHEDIR" "$APPTAINER_TMPDIR"
 apptainer build --fakeroot "$SCRATCH_DIR/agent.sif" recipe/agent.def
+# Some login nodes have no apptainer ("command not found"). Then run the same build on a compute node:
+#   srun -p ice-cpu --cpus-per-task=8 --mem=32G --time=00:40:00 \
+#       apptainer build --fakeroot "$SCRATCH_DIR/agent.sif" recipe/agent.def
 
 # 2. Run every .wav under recordings/ as one turn each.
 sbatch run_agent.sbatch
@@ -51,7 +54,7 @@ the shared Hugging Face cache, and writes:
 - `a4-agent-<job id>.out`: every transcript and reply, the latency table, and the WER if
   `<recordings>/references.json` exists
 
-Model loading takes a few minutes; the 40 recorded turns then take about 4 minutes.
+The whole job takes about 6 minutes for the 40 recorded turns, most of it model loading.
 
 ### How recordings become conversations
 
