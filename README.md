@@ -70,6 +70,9 @@ python3 waterfall.py --trace run_output/<job id>/trace.jsonl --figure report/wat
 python3 wer/score_wer.py --trace run_output/<job id>/trace.jsonl --references recordings/references.json
 ```
 
+The run the report uses is `run_output/7153569/` (trace, spoken replies, and the job's log as
+`job.out`), measured at the commit before the one that added it; `report/waterfall.png` is drawn from it.
+
 `waterfall.py` lists every turn the checker rejects, prints the p50 and p95 table of the report from
 `voice_kit.summarize_stages`, splits the LLM-side stages with the agent's extra stamps, and draws
 the figure. The table needs only the standard library; the figure needs matplotlib.
