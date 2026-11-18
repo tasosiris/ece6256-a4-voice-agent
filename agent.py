@@ -93,8 +93,8 @@ RELAY_EXAMPLES = (
 
 ANSWER_PROMPT = (
     VOICE_STYLE + " Answer only from the knowledge base below. Never guess: if it does not hold the "
-    "answer, do not say yes or no: say that you don't have anything about it, and offer something "
-    "related that the knowledge base does hold. "
+    "answer, do not say yes or no: say only that you don't have anything about it, and name "
+    "nothing else the center might have. "
     "When a question has two parts, answer both. Timers, reminders and room bookings are handled "
     "elsewhere, so never claim to have set, changed or booked anything; if the user seems to want "
     "that, ask them to say it again.\n\nKnowledge base:\n"
