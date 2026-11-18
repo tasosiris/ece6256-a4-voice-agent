@@ -80,7 +80,7 @@ apptainer build --fakeroot "$SCRATCH_DIR/agent.sif" recipe/agent.def
 sbatch run_agent.sbatch
 ```
 
-The build takes about 4 minutes and the job about 4 minutes. If the login node has no `apptainer`, run the build on a compute node by putting `srun -p ice-cpu --cpus-per-task=8 --mem=32G --time=00:40:00` in front of it.
+The build takes about 5 minutes and the job 4 to 8 minutes. We checked this from a fresh clone: job 7161061 gave a p50 TTFA of 232 ms and the same replies. If the login node has no `apptainer`, run the build on a compute node by putting `srun -p ice-cpu --cpus-per-task=8 --mem=32G --time=00:40:00` in front of it.
 
 The job plays the 40 recordings in `recordings/` and writes the trace to `run_output/<job id>/trace.jsonl`, the spoken replies to `tts/`, and the tables and WER to `a4-agent-<job id>.out`. Package versions are pinned in `recipe/requirements.txt`. The LLM runs at temperature 0 with seed 0 (`SEED` in `agent.py`) and vLLM starts with `--seed 42`.
 
