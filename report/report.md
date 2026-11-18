@@ -4,8 +4,8 @@
 > it. Lines marked **WRITE** are the analysis the course requires you to write yourselves; the
 > evidence for each is listed under it. Delete every line that starts with ">" before submitting.
 
-**Partners:** Tasos Siris, asiris3, and Muyu [last name, Georgia Tech username]
-**Models:** LLM Llama 3.1 8B Instruct (vLLM, bfloat16, temperature 0); ASR faster-whisper `small.en` (float16, beam 5); TTS Piper `en_US-lessac-medium`
+**Partners:** Tasos Siris, asiris3, and Muyu [last name, Georgia Tech username]  
+**Models:** LLM Llama 3.1 8B Instruct (vLLM, bfloat16, temperature 0); ASR faster-whisper `small.en` (float16, beam 5); TTS Piper `en_US-lessac-medium`  
 **Run behind the figures:** PACE-ICE job 7153569; 8 CPU cores [CPU model] and one NVIDIA H100 80GB; 40 turns; trace file `run_output/7153569/trace.jsonl`
 
 ## 1. The system
