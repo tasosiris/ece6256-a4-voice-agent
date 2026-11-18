@@ -1,0 +1,104 @@
+---------------------------------------
+Begin Slurm Prolog: Nov-18-2026 00:37:09
+Job ID:    7153831
+User ID:   asiris3
+Account:   ece
+Job name:  a4-agent
+Partition: coe-gpu
+QOS:       coe-ice
+---------------------------------------
+node: atl1-1-03-011-28-0.pace.gatech.edu  model: meta-llama/Llama-3.1-8B-Instruct  cpus: 8
+GPU 0: NVIDIA H100 80GB HBM3 (UUID: GPU-a3ff9b46-c5de-50bf-76d1-e8d4eeb02bf3)
+LLM server ready on port 33831
+agent: asr small.en on cuda, tts en_US-lessac-medium.onnx at 22050 Hz, llm meta-llama/Llama-3.1-8B-Instruct, 8 threads
+turn_0001 [muyu_d01_t01.wav] user: 'Start a 10 minute timer for the table.' agent: 'Ten minutes for the table, starting now.'
+turn_0002 [muyu_d01_t02.wav] user: 'Actually mix it 15' agent: 'What should I change the table timer to?'
+turn_0003 [muyu_d01_t03.wav] user: 'How long is left?' agent: 'About nine minutes left on the table timer.'
+turn_0004 [muyu_d02_t01.wav] user: 'Start a timer for 5 minutes for the axe' agent: 'Five minutes for the axe, starting now.'
+turn_0005 [muyu_d02_t02.wav] user: 'Set another timer over 10 minutes for' agent: 'Ten minute timer, starting now.'
+turn_0006 [muyu_d02_t03.wav] user: 'What timers do I have?' agent: 'Two timers: axe with about four minutes left and ten minute with about nine minutes left.'
+turn_0007 [muyu_d02_t04.wav] user: 'Console, The X Timer' agent: "I don't have a X timer. Two timers: axe with about four minutes left and ten minute with about nine minutes left."
+turn_0008 [muyu_d03_t01.wav] user: 'Remend me to water the plants.' agent: 'At what time?'
+turn_0009 [muyu_d03_t02.wav] user: '6th in the evening' agent: 'I will remind you to water the plants at six in the evening.'
+turn_0010 [muyu_d03_t03.wav] user: 'What reminders do I have?' agent: 'One reminder: water the plants at six in the evening.'
+turn_0011 [muyu_d04_t01.wav] user: 'What time does the coffee close on Saturday?' agent: 'The Corner Cup cafe closes at two in the afternoon on Saturdays.'
+turn_0012 [muyu_d04_t02.wav] user: 'Where can I print and how much is it?' agent: 'You can print at the printing station on the second floor. Black and white pages cost ten cents and color pages cost fifty cents.'
+turn_0013 [muyu_d04_t03.wav] user: 'Is there a swimming pool' agent: "I don't have anything about it."
+turn_0014 [muyu_d05_t01.wav] user: 'I need a room on Thursday after this' agent: 'What time on Thursday?'
+turn_0015 [muyu_d05_t02.wav] user: 'Fife' agent: 'How many people?'
+turn_0016 [muyu_d05_t03.wav] user: 'A Projector' agent: 'How many people?'
+turn_0017 [muyu_d05_t04.wav] user: 'Yes, under the name South' agent: 'How many people?'
+turn_0018 [muyu_d06_t01.wav] user: 'Connecticut Room for 15 people with a whiteboard' agent: 'No room holds fifteen and has a whiteboard. Maple Hall holds twenty but has no whiteboard. Cedar Room has a whiteboard but holds only eight. Would you like Maple Hall, or a smaller group?'
+turn_0019 [muyu_d06_t02.wav] user: 'Maple Hall is fine with that too' agent: 'Which day and time would you like?'
+turn_0020 [muyu_d06_t03.wav] user: 'yes the name is Jordan' agent: 'Which day and time would you like?'
+turn_0021 [tasos_d01_t01.wav] user: 'Start a 10 minute timer for the tea.' agent: 'Ten minutes for the tea, starting now.'
+turn_0022 [tasos_d01_t02.wav] user: 'Actually make it 15.' agent: 'Changed. Fifteen minutes for the tea.'
+turn_0023 [tasos_d01_t03.wav] user: 'How long is left?' agent: 'About fourteen minutes left on the tea timer.'
+turn_0024 [tasos_d02_t01.wav] user: 'Sit the timer for 5 minutes for the egg' agent: 'Five minutes for the egg, starting now.'
+turn_0025 [tasos_d02_t02.wav] user: 'Set another timer for 20 minutes for the laundry' agent: 'Twenty minutes for the laundry, starting now.'
+turn_0026 [tasos_d02_t03.wav] user: 'What timers do I have?' agent: 'Two timers: egg with about four minutes left and laundry with about nineteen minutes left.'
+turn_0027 [tasos_d02_t04.wav] user: 'Cancel the eggs timer.' agent: 'Cancelled the egg timer.'
+turn_0028 [tasos_d03_t01.wav] user: 'Remind me to water the plants.' agent: 'At what time?'
+turn_0029 [tasos_d03_t02.wav] user: '6 in the evening' agent: 'I will remind you to water the plants at six in the evening.'
+turn_0030 [tasos_d03_t03.wav] user: 'What reminders do I have?' agent: 'One reminder: water the plants at six in the evening.'
+turn_0031 [tasos_d04_t01.wav] user: 'What time does the cafe close on Saturdays?' agent: 'The Corner Cup cafe closes at two in the afternoon on Saturdays.'
+turn_0032 [tasos_d04_t02.wav] user: 'Where can I print and how much is it?' agent: 'You can print at the printing station on the second floor. Black and white pages cost ten cents and color pages cost fifty cents.'
+turn_0033 [tasos_d04_t03.wav] user: 'Is there a swimming pool?' agent: "I don't have anything about it."
+turn_0034 [tasos_d05_t01.wav] user: 'I need a room on Thursday afternoon.' agent: 'How many people?'
+turn_0035 [tasos_d05_t02.wav] user: '5' agent: 'Do you need any equipment?'
+turn_0036 [tasos_d05_t03.wav] user: 'A Projector' agent: 'Cedar Room on the first floor is free on Thursday at two in the afternoon. It holds eight and has a projector. Shall I book it?'
+turn_0037 [tasos_d05_t04.wav] user: 'Yes, under the name Sam.' agent: 'Booked. Cedar Room, Thursday at two in the afternoon, for Sam.'
+turn_0038 [tasos_d06_t01.wav] user: 'Can we get a room for 15 people with a whiteboard?' agent: 'No room holds fifteen and has a whiteboard. Maple Hall holds twenty but has no whiteboard. Cedar Room has a whiteboard but holds only eight. Would you like Maple Hall, or a smaller group?'
+turn_0039 [tasos_d06_t02.wav] user: 'Maple Hall is fine, Wednesday at 2.' agent: 'Maple Hall on the third floor is free on Wednesday at two in the afternoon. It holds twenty but has no whiteboard. Shall I book it?'
+turn_0040 [tasos_d06_t03.wav] user: 'Yes, the name is Jordan' agent: 'Booked. Maple Hall, Wednesday at two in the afternoon, for Jordan.'
+trace: /work/run_output/7153831/trace.jsonl
+
+| | p50 (ms) | p95 (ms) |
+|---|---|---|
+| **TTFA, all turns** | 253 | 350 |
+| ASR: `asr_final` minus `end_of_user_speech` | 35 | 45 |
+| LLM start: `llm_first_token` minus `asr_final` | 91 | 122 |
+| Speech start: `tts_first_audio` minus `llm_first_token` | 119 | 228 |
+| Not on the TTFA path: `llm_complete` minus `llm_first_token` | 55 | 219 |
+
+Turns counted: 40 of 40.
+voice_kit.summarize_time_to_first_audio: {'turn_count': 40.0, 'p50_milliseconds': 253.3374335, 'p95_milliseconds': 349.55658344999995}
+
+Inside the two LLM-side stages (from the agent's extra stamps):
+| part | p50 (ms) | p95 (ms) |
+|---|---|---|
+| action call (LLM picks the intent, not spoken) | 78 | 109 |
+| first token of the spoken reply | 13 | 20 |
+| first piece of text complete | 55 | 103 |
+| Piper synthesis of the first piece | 69 | 148 |
+tasos: 20 utterances, 118 reference words
+  pooled word error rate 0.0339   mean over utterances 0.0212
+  tasos_d02_t01.wav: 0.333 (3 errors in 9 words)
+    said : set a timer for five minutes for the eggs
+    heard: sit the timer for five minutes for the egg
+  tasos_d06_t01.wav: 0.091 (1 errors in 11 words)
+    said : can i get a room for fifteen people with a whiteboard
+    heard: can we get a room for fifteen people with a whiteboard
+muyu: 20 utterances, 118 reference words
+  pooled word error rate 0.2119   mean over utterances 0.2243
+  muyu_d05_t02.wav: 1.000 (1 errors in 1 words)
+    said : five
+    heard: fife
+  muyu_d02_t04.wav: 0.500 (2 errors in 4 words)
+    said : cancel the eggs timer
+    heard: console the x timer
+  muyu_d02_t02.wav: 0.444 (4 errors in 9 words)
+    said : set another timer for twenty minutes for the laundry
+    heard: set another timer over ten minutes for
+---------------------------------------
+Begin Slurm Epilog: Nov-18-2026 00:40:33
+Job ID:        7153831
+User ID:       asiris3
+Account:       ece
+Job name:      a4-agent
+Resources:     cpu=8,gres/gpu:h100=1,mem=64G,node=1
+Rsrc Used:     cput=00:27:36,vmem=0,walltime=00:03:27,mem=5435984K,energy_used=0
+Partition:     coe-gpu
+QOS:           coe-ice
+Nodes:         atl1-1-03-011-28-0
+---------------------------------------
