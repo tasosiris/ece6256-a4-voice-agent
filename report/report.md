@@ -14,7 +14,7 @@ Our agent is a simple chain: speech to text, then the LLM, then text to speech.
 - **LLM, call 2:** streamed. It repeats the reply from the task logic, or for a lookup question it answers from the knowledge base.
 - **TTS:** Piper starts speaking while call 2 is still streaming. We cut the text at the end of each sentence, and the first piece also at the first comma, so audio starts sooner.
 
-Settings that affect time: Whisper and the LLM run on the GPU and Piper runs on the CPU. Both CPU libraries are set to the 8 cores of the job. The full knowledge base goes into the prompt only on lookup turns. Before the first timed turn we run every stage twice as a warm-up.
+Settings that affect time: Whisper and the LLM run on the GPU and Piper runs on the CPU. Both CPU libraries are set to the 8 cores of the job. The full knowledge base goes into the prompt only on lookup turns. Before the first timed turn we run every stage twice as a warm-up. The live demo also has barge-in (`demo.py --barge-in`): it learns the echo of its own voice at start-up and stops speaking when the user talks over it. The measured runs do not use it.
 
 ## 2. The latency waterfall
 
@@ -88,7 +88,7 @@ The job plays the 40 recordings in `recordings/` and writes the trace to `run_ou
 
 **Tools used:** Claude Code (Anthropic), model Claude Fable 5.2.
 
-**What for:** We used it for most of the build. It wrote the code of the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`), the tests, the pinned requirements and the README. It also built the image, ran the jobs on PACE-ICE and drew the figure. For this report it wrote sections 1, 2 and 5, filled in the tables, and drafted sections 3 and 4 from the trace, which we then checked against the numbers and edited.
+**What for:** We used it for most of the build. It wrote the code of the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`, `barge_in.py`), the tests, the pinned requirements and the README. It also built the image, ran the jobs on PACE-ICE and drew the figure. For this report it wrote sections 1, 2 and 5, filled in the tables, and drafted sections 3 and 4 from the trace, which we then checked against the numbers and edited.
 
 One design point a reader should know: for timers, reminders and bookings the reply text is produced by code and the LLM repeats it. It repeated it word for word in 34 of 34 such turns in the reported run.
 
