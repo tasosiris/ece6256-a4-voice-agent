@@ -5,3 +5,4 @@ __pycache__/
 vllm-*.log
 a4-agent-*.out
 .venv/
+~$*
