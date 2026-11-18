@@ -1,0 +1,24 @@
+{
+  "tasos": {
+    "tasos_d01_t01.wav": "Start a ten minute timer for the tea.",
+    "tasos_d01_t02.wav": "Actually make it fifteen.",
+    "tasos_d01_t03.wav": "How long is left?",
+    "tasos_d02_t01.wav": "Set a timer for five minutes for the eggs.",
+    "tasos_d02_t02.wav": "Set another timer for twenty minutes for the laundry.",
+    "tasos_d02_t03.wav": "What timers do I have?",
+    "tasos_d02_t04.wav": "Cancel the eggs timer.",
+    "tasos_d03_t01.wav": "Remind me to water the plants.",
+    "tasos_d03_t02.wav": "Six in the evening.",
+    "tasos_d03_t03.wav": "What reminders do I have?",
+    "tasos_d04_t01.wav": "What time does the cafe close on Saturdays?",
+    "tasos_d04_t02.wav": "Where can I print, and how much is it?",
+    "tasos_d04_t03.wav": "Is there a swimming pool?",
+    "tasos_d05_t01.wav": "I need a room on Thursday afternoon.",
+    "tasos_d05_t02.wav": "Five.",
+    "tasos_d05_t03.wav": "A projector.",
+    "tasos_d05_t04.wav": "Yes, under the name Sam.",
+    "tasos_d06_t01.wav": "Can I get a room for fifteen people with a whiteboard?",
+    "tasos_d06_t02.wav": "Maple Hall is fine. Wednesday at two.",
+    "tasos_d06_t03.wav": "Yes, the name is Jordan."
+  }
+}
