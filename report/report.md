@@ -2,7 +2,7 @@
 
 **Partners:** Tasos Siris (asiris3) and Muyu Pan ([Muyu's Georgia Tech username])  
 **Models:** LLM: Llama 3.1 8B Instruct on vLLM. ASR: faster-whisper `small.en`. TTS: Piper `en_US-lessac-medium`.  
-**Run behind the figures:** PACE-ICE job 7153569, 8 CPU cores and one NVIDIA H100 80GB, 40 turns, trace file `run_output/7153569/trace.jsonl`
+**Run behind the figures:** PACE-ICE job 7153569, 8 cores of an Intel Xeon Platinum 8462Y+ (2.8 GHz) and one NVIDIA H100 80GB, 40 turns, trace file `run_output/7153569/trace.jsonl`
 
 ## 1. The system
 
