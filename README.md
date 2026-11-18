@@ -112,6 +112,20 @@ python3 agent.py --llm-model llama3.1:8b --llm-base-url http://127.0.0.1:11434/v
 `demo.py` shows a line to say before every turn, chosen from what the agent just asked, and walks
 through one timer, one lookup and one booking; `--no-guide` hides this.
 
+### Barge-in
+
+```bash
+python3 demo.py --barge-in --llm-model llama3.1:8b --llm-base-url http://127.0.0.1:11434/v1
+```
+
+With `--barge-in` the microphone stays open while the agent speaks. Start talking and it stops within
+about a third of a second and answers what you said, with no key press. It works on laptop speakers:
+at start-up the agent says one sentence and `barge_in.py` learns from it how its own voice arrives at
+the microphone in each frequency band, so that later only sound beyond that echo counts as the user.
+Keep the volume where it was during that sentence. The first word said over the agent overlaps its
+voice and is often misheard, so open with a word that can be lost ("Actually, ..."). The guide adds a
+fourth task that shows it. Barge-in is part of the live demo only; the measured runs do not use it.
+
 The first run downloads the ASR and TTS weights from Hugging Face. Laptop timings are not the
 reported ones.
 
@@ -133,6 +147,7 @@ nlu.py              rules that read values out of a transcript
 waterfall.py        trace check, report tables, waterfall figure
 record.py           record the scripted utterances
 demo.py             live microphone conversation
+barge_in.py         echo-aware detection of the user talking over the agent (demo only)
 dialogues/          the scripts that were recorded
 recordings/         our recordings and their reference transcripts
 run_agent.sbatch    the PACE-ICE job
