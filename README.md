@@ -54,7 +54,7 @@ the shared Hugging Face cache, and writes:
 - `a4-agent-<job id>.out`: every transcript and reply, the latency table, and the WER if
   `<recordings>/references.json` exists
 
-The whole job takes about 6 minutes for the 40 recorded turns, most of it model loading.
+The whole job takes 4 to 8 minutes for the 40 recorded turns, most of it model loading.
 
 ### How recordings become conversations
 
