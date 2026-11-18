@@ -16,6 +16,8 @@ listens, with no key press. Its own voice from the speakers is told apart from y
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 import threading
 import time
 from collections import deque
@@ -256,6 +258,12 @@ def main() -> None:
                 command = input("[Enter to talk, n = new conversation, q = quit] ").strip().lower()
 
                 if command == "q":
+                    # Stopping two CoreAudio streams of one process can deadlock inside PortAudio,
+                    # so with barge-in the demo leaves without stopping them.
+                    if arguments.barge_in:
+                        sys.stdout.flush()
+                        os._exit(0)
+
                     break
 
                 if command == "n":
@@ -265,6 +273,10 @@ def main() -> None:
                     continue
 
                 pcm = audio.listen()
+
+                if len(pcm) < 0.3 * 2 * MIC_RATE_HZ:
+                    print("Nothing recorded: press Enter, say the line, then press Enter again.")
+                    continue
 
             else:
                 pcm = said_over
