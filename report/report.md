@@ -1,26 +1,25 @@
 # Assignment 4 report: Hartwell voice agent
 
-> DRAFT. Every number below is from `run_output/7153569/trace.jsonl` or the run folders named next to
-> it. Lines marked **WRITE** are the analysis the course requires you to write yourselves; the
-> evidence for each is listed under it. Delete every line that starts with ">" before submitting.
+> DRAFT. All numbers come from `run_output/7153569/trace.jsonl` or the run folders named next to
+> them. Text marked **DRAFT IDEA** is only the main idea for the parts you have to write: check it
+> against the numbers and rewrite it in your own words. Delete all the quoted notes like this one
+> before submitting.
 
-**Partners:** Tasos Siris, asiris3, and Muyu [last name, Georgia Tech username]  
-**Models:** LLM Llama 3.1 8B Instruct (vLLM, bfloat16, temperature 0); ASR faster-whisper `small.en` (float16, beam 5); TTS Piper `en_US-lessac-medium`  
-**Run behind the figures:** PACE-ICE job 7153569; 8 CPU cores [CPU model] and one NVIDIA H100 80GB; 40 turns; trace file `run_output/7153569/trace.jsonl`
+**Partners:** Tasos Siris (asiris3) and Muyu [last name, Georgia Tech username]  
+**Models:** LLM: Llama 3.1 8B Instruct on vLLM. ASR: faster-whisper `small.en`. TTS: Piper `en_US-lessac-medium`.  
+**Run behind the figures:** PACE-ICE job 7153569, 8 CPU cores [CPU model] and one H100 GPU, 40 turns, trace file `run_output/7153569/trace.jsonl`
 
 ## 1. The system
 
-The agent is a cascade: faster-whisper transcribes the whole utterance once the speaker stops; the
-LLM is called once, not streamed, to pick the intent as JSON (never spoken); rules read numbers,
-times, days and equipment from the transcript; deterministic task logic keeps the timers, reminders
-and booking and words the reply; the LLM is called a second time, streamed, to speak that reply (or,
-for a lookup, to answer from the knowledge base); Piper synthesizes the stream piece by piece.
-ASR and the intent call wait for the stage before them; the second LLM call and the TTS overlap.
-The stream is cut for the TTS at sentence ends, and the first piece also at the first comma or
-semicolon. The whole knowledge base (one JSON file) is in the prompt of the second call on lookup
-turns only; the intent prompt holds only the room and feature names. Whisper and the LLM run on the
-GPU, Piper on the CPU; CTranslate2 and ONNX Runtime are both set to the job's 8 cores. Before the
-first timed turn the agent runs every stage twice with both prompts on two seconds of noise.
+Our agent is a simple chain: speech to text, then the LLM, then text to speech.
+
+- **ASR:** Whisper transcribes the whole utterance once the user stops talking. It does not stream.
+- **LLM, call 1:** picks the intent (set a timer, book a room, and so on) as JSON. This call is not streamed and is never spoken.
+- **Rules and task logic:** plain Python reads the numbers, times, days and equipment from the transcript, keeps track of timers, reminders and the booking, and writes the reply.
+- **LLM, call 2:** streamed. It repeats the reply from the task logic, or for a lookup question it answers from the knowledge base.
+- **TTS:** Piper starts speaking while call 2 is still streaming. We cut the text at the end of each sentence, and the first piece also at the first comma, so audio starts sooner.
+
+Settings that affect time: Whisper and the LLM run on the GPU and Piper runs on the CPU. Both CPU libraries are set to the 8 cores of the job. The full knowledge base goes into the prompt only on lookup turns. Before the first timed turn we run every stage twice as a warm-up.
 
 ## 2. The latency waterfall
 
@@ -36,16 +35,18 @@ first timed turn the agent runs every stage twice with both prompts on two secon
 
 Turns counted: 40 of 40.
 
-Each segment of the figure is that stage's own percentile over the 40 turns, so the three p95
-segments add up to more than the p95 TTFA; the black line is the TTFA percentile measured over the
-turns. The agent's extra stamps cut the two LLM-side stages further (p50 / p95, ms): intent call
-78 / 109; first token of the spoken reply 14 / 20; first piece of text complete 49 / 103; Piper
-synthesis of the first piece 56 / 133.
+In the figure each bar is that stage's own percentile, so the p95 bars add up to more than the p95 TTFA. The black line is the TTFA measured over the turns.
 
-**How I treat stages that overlap:** `llm_first_token` is the first token of the second, spoken LLM
-call, so the silent intent call is counted in "LLM start". Piper starts on the first piece while the
-LLM is still streaming; the wait for that first piece is counted in "Speech start", and the rest of
-the stream (`llm_complete` minus `llm_first_token`) is reported but is not on the path to first audio.
+We also added our own stamps to split the stages further (p50 / p95, in ms):
+
+| Part | p50 | p95 |
+|---|---|---|
+| LLM call 1 (intent) | 78 | 109 |
+| First token of call 2 | 14 | 20 |
+| Waiting for the first piece of text | 49 | 103 |
+| Piper making the first audio | 56 | 133 |
+
+**How I treat stages that overlap:** `llm_first_token` is the first token of call 2, the one that is spoken. So call 1 is counted inside "LLM start". Piper starts on the first piece while the LLM is still writing, and the wait for that first piece is counted inside "Speech start". The rest of the LLM stream is reported in the last row but it does not delay the first audio.
 
 **How to recompute these numbers:** `python3 waterfall.py --trace run_output/7153569/trace.jsonl --figure report/waterfall.png`
 
@@ -56,99 +57,72 @@ the stream (`llm_complete` minus `llm_first_token`) is reported but is not on th
 | Tasos | 20 | 118 | 3.4% | 2.1% |
 | Muyu | 20 | 118 | 21.2% | 22.4% |
 
-> **WRITE** (two or three sentences): which voice the ASR handles worse, what the difference looks
-> like, one quoted utterance, and anything about the recording that could explain it. Evidence:
-> - Both speakers read the same 20 sentences, so the gap is not the wording.
-> - Tasos: 4 wrong words, 2 utterances. "set a timer for five minutes for the eggs" was heard as
->   "sit the timer for five minutes for the egg"; "can i get a room" as "can we get a room".
-> - Muyu: 25 wrong words. "cancel the eggs timer" was heard as "console the x timer"; "five" as
->   "fife"; "set another timer for twenty minutes for the laundry" as "set another timer over ten
->   minutes for"; "tea" as "table"; "make it" as "mix it"; "Thursday afternoon" as "Thursday after this".
-> - Recording facts: Muyu's takes peak at about 2,300 to 5,500 of 32,767, Tasos's at about 5,800 to
->   12,600; several of Muyu's files end within 0.1 s of the last word (for example `muyu_d03_t03.wav`),
->   and the laundry sentence lost its last two words.
-> - Effect on tasks: all 6 of Tasos's dialogues completed; 2 of Muyu's 6 did (reminder, lookup).
->   The failures follow the misheard word (the timer was labelled "table" and "axe").
+**DRAFT IDEA:** Whisper is much worse on Muyu's voice, about six times the error rate, even though we both read the same 20 sentences. The mistakes are mostly on the short important words, for example "cancel the eggs timer" was heard as "console the x timer". Muyu's recordings are also quieter and some stop right after the last word, so we cannot say how much is the accent and how much is the recording. It mattered for the tasks: all 6 of Tasos's dialogues worked but only 2 of Muyu's 6, because the agent acted on the wrong words.
+
+> Evidence to check and pick from:
+> - Tasos: 4 wrong words in 2 utterances ("set a timer ... eggs" heard as "sit the timer ... egg").
+> - Muyu: 25 wrong words. "five" heard as "fife", "tea" as "table", "make it" as "mix it",
+>   "Thursday afternoon" as "Thursday after this", and the laundry sentence lost its last two words.
+> - Loudness: Muyu's takes peak at about 2,300 to 5,500 out of 32,767, Tasos's at 5,800 to 12,600.
+> - Several of Muyu's files end within 0.1 s of the last word (for example `muyu_d03_t03.wav`).
 
 ## 4. The bottleneck
 
-> **WRITE** all four items yourselves. This section is graded on whether the evidence supports the
-> claim. Evidence you can draw on:
+**The dominant stage:**
 
-**The dominant stage:** [WRITE]
+**DRAFT IDEA:** Speech start is the biggest stage: 100 ms out of 235 ms at the median, which is 43% of the TTFA. LLM start is close behind at 91 ms (39%), and ASR is small at 36 ms (15%). So there is no single huge bottleneck, but speech start is the largest and it also grows the most at p95 (225 ms).
 
-> - Speech start: p50 100 ms of a 235 ms TTFA (43%). LLM start: 91 ms (39%). ASR: 36 ms (15%).
-> - Inside speech start at the median: 49 ms waiting for the first piece of text, 56 ms of Piper.
-> - Inside LLM start: the intent call is 78 ms of the 91 ms.
+**Why:**
 
-**Why:** [WRITE]
+**DRAFT IDEA:** Two reasons, and we measured both. First, Piper runs on the CPU while Whisper and the LLM use the GPU, and it takes 56 ms to make the first audio. Second, Piper cannot start until the LLM has finished the first piece of text, which takes 49 ms. Longer first pieces are slower: the three slowest turns (341 to 402 ms) are the long room proposals. When we stopped cutting at the first comma, speech start went from 100 to 119 ms.
 
-> - Piper runs on the CPU (8 threads); Whisper and the LLM run on the H100.
-> - Turns where the task logic words the reply (34 turns): first piece ready after 37 ms, Piper 55 ms,
->   TTFA p50 234 ms. Lookup turns answered by the LLM (6 turns): first piece after 73 ms, Piper 88 ms,
->   TTFA p50 277 ms.
-> - The three slowest turns (341, 362, 402 ms) are the long room proposals: their first piece took
->   61 to 103 ms to arrive and 122 to 166 ms to synthesize.
-> - Fastest turn 152 ms, slowest 402 ms.
+> Evidence to check and pick from:
+> - Turns where the task logic writes the reply (34 turns): first piece ready after 37 ms, Piper
+>   55 ms, TTFA p50 234 ms. Lookup turns (6 turns): first piece 73 ms, Piper 88 ms, TTFA p50 277 ms.
+> - Slowest three turns: first piece took 61 to 103 ms to arrive and 122 to 166 ms to synthesize.
+> - No comma cut, run `run_output/7153831/`: TTFA p50 253 ms against 235 ms.
 
-**The fix I would ship next:** [WRITE: one change, the expected effect on the p50, and the reasoning]
+**The fix I would ship next:**
 
-> - Run `run_output/7153831/` (first piece not cut at a comma): TTFA p50 253 ms against 235 ms, speech
->   start 119 ms against 100 ms. A shorter first piece is measurably faster.
-> - Run `run_output/7153832/` (Llama 3.2 3B): TTFA p50 213 ms, intent call 66 ms against 78 ms, first
->   piece 28 ms against 49 ms; but it said "fourteen hundred" for the cafe's closing time and took two
->   misheard lines for room names.
-> - Not measured, so only as reasoning: for timer, reminder and booking turns the reply text exists
->   before the second LLM call starts; Piper on the GPU; a shorter first piece.
+**DRAFT IDEA:** For timers, reminders and bookings the reply text is already written by our code before call 2 starts, and the LLM just repeats it. So we would send the first sentence straight to Piper and not wait for the LLM to repeat it. That removes the first token (14 ms) and the wait for the first piece (37 ms on these turns), so about 50 ms on 34 of our 40 turns. We expect the p50 to drop from 235 ms to roughly 185 ms. Lookup turns would stay the same.
 
-**One thing I tried that did not help:** [WRITE]
+> This fix was not measured, only reasoned from the trace, so say that. Other options you could
+> pick, with their numbers:
+> - Llama 3.2 3B, run `run_output/7153832/`: TTFA p50 213 ms, but it said "fourteen hundred" for the
+>   cafe's closing time and took two misheard lines for room names.
+> - Piper on the GPU, or a smaller Piper voice: not measured.
 
-> - Run `run_output/7153830/` (Whisper beam size 1 instead of 5): ASR p50 34 ms against 36 ms, TTFA p50
->   230 ms against 235 ms, p95 323 against 342. WER rose from 3.4% to 5.9% (Tasos) and from 21.2% to
->   24.6% (Muyu). Each configuration was run once, so a difference of a few milliseconds is within
->   run-to-run variation.
+**One thing I tried that did not help:**
+
+**DRAFT IDEA:** We set Whisper's beam size to 1 instead of 5, hoping for faster ASR. It saved almost nothing: ASR went from 36 to 34 ms and TTFA from 235 to 230 ms, which is inside the normal variation between runs. But the WER got worse for both of us, 3.4% to 5.9% for Tasos and 21.2% to 24.6% for Muyu. ASR is only 15% of the TTFA, so there was not much to win there, and we kept beam size 5.
+
+> Evidence: run `run_output/7153830/`. Each setting was run once.
 
 ## 5. Reproducing this
 
-From the unzipped submission on PACE-ICE (commands also in `README.md`):
+On PACE-ICE, from the unzipped submission (the same commands are in `README.md`):
 
 ```bash
 export SCRATCH_DIR=$HOME/scratch
 export APPTAINER_CACHEDIR=$SCRATCH_DIR/cache APPTAINER_TMPDIR=$SCRATCH_DIR/tmp
 mkdir -p "$APPTAINER_CACHEDIR" "$APPTAINER_TMPDIR"
-apptainer build --fakeroot "$SCRATCH_DIR/agent.sif" recipe/agent.def   # about 4 minutes
-sbatch run_agent.sbatch                                                 # about 4 minutes
+apptainer build --fakeroot "$SCRATCH_DIR/agent.sif" recipe/agent.def
+sbatch run_agent.sbatch
 ```
 
-On a login node without Apptainer, prefix the build with
-`srun -p ice-cpu --cpus-per-task=8 --mem=32G --time=00:40:00`. The job plays the 40 recordings under
-`recordings/` and writes `run_output/<job id>/trace.jsonl`, the spoken replies under `tts/`, and the
-tables and WER in `a4-agent-<job id>.out`. Dependencies are pinned in `recipe/requirements.txt`. The
-LLM runs at temperature 0 with seed 0 (`SEED` in `agent.py`), vLLM is started with `--seed 42`, and
-Whisper decodes with beam search and no sampling.
+The build takes about 4 minutes and the job about 4 minutes. If the login node has no `apptainer`, run the build on a compute node by putting `srun -p ice-cpu --cpus-per-task=8 --mem=32G --time=00:40:00` in front of it.
+
+The job plays the 40 recordings in `recordings/` and writes the trace to `run_output/<job id>/trace.jsonl`, the spoken replies to `tts/`, and the tables and WER to `a4-agent-<job id>.out`. Package versions are pinned in `recipe/requirements.txt`. The LLM runs at temperature 0 with seed 0 (`SEED` in `agent.py`) and vLLM starts with `--seed 42`.
 
 ## Appendix: AI-use disclosure
 
-> **WRITE** this yourselves; it is graded for candor. The facts:
+> Check every line here is true for both of you and fix what is not. This part is graded for
+> being complete and honest.
 
 **Tools used:** Claude Code (Anthropic), model Claude Fable 5.2. [Add anything else either of you used.]
 
-**What for:**
-> - It wrote the code: `agent.py`, `dialogue.py`, `nlu.py`, `waterfall.py`, `record.py`, `demo.py`,
->   the tests, the dialogue scripts, `recipe/requirements.txt`, the changes to `run_agent.sbatch`,
->   and the README.
-> - It built the image and submitted the jobs on PACE-ICE, copied the results back and drew the figure.
-> - In this report it filled in the header, section 1, the tables, the overlap paragraph and
->   section 5, and listed the measurements under sections 3 and 4.
-> - A design fact a reader should know: for timers, reminders and bookings the reply text is produced
->   by code and the LLM repeats it (word for word in 34 of 34 such turns in the reported run).
+**What for:** Claude Code wrote the code of the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`), the tests, the pinned requirements and the README. It also built the image, ran the jobs on PACE-ICE and drew the figure. In this report it wrote sections 1, 2 and 5 and filled in the tables. For sections 3 and 4 it listed the measurements and suggested the main idea of each answer, and we [rewrote them / checked them against the trace: say what you actually did].
 
-**What I wrote or decided myself:** [WRITE: the recordings, the analysis in sections 3 and 4, the
-choice of what to ship, and whatever else is true.]
+**What I wrote or decided myself:** [Fill in what is true, for example: we recorded the 40 utterances, chose which run to report, decided to keep beam size 5 and the 8B model, and wrote the final text of sections 3 and 4.]
 
-**How I checked it:**
-> - 12 unit tests of the task logic against the example dialogues of `tasks/task_families.md`.
-> - The course checker (`record_problems`) passes on all 40 turns of the shipped trace.
-> - Every transcript and reply of the run was read (`run_output/7153569/job.out`); that reading found
->   and fixed an invented "fitness center" in a lookup answer and two misread numbers.
-> - [Add what you checked yourselves, for example listening to the audio in `run_output/7153569/tts/`.]
+**How I checked it:** The task logic has 12 unit tests based on the example dialogues in the handout. The course checker passes on all 40 turns of the trace. Every transcript and reply of the run was read in `run_output/7153569/job.out`, which is how an invented "fitness center" answer and two misread numbers were found and fixed. [Add what you checked yourselves, for example listening to the audio in `run_output/7153569/tts/`.]
