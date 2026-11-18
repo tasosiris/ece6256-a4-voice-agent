@@ -20,5 +20,27 @@
     "tasos_d06_t01.wav": "Can I get a room for fifteen people with a whiteboard?",
     "tasos_d06_t02.wav": "Maple Hall is fine. Wednesday at two.",
     "tasos_d06_t03.wav": "Yes, the name is Jordan."
+  },
+  "muyu": {
+    "muyu_d01_t01.wav": "Start a ten minute timer for the tea.",
+    "muyu_d01_t02.wav": "Actually make it fifteen.",
+    "muyu_d01_t03.wav": "How long is left?",
+    "muyu_d02_t01.wav": "Set a timer for five minutes for the eggs.",
+    "muyu_d02_t02.wav": "Set another timer for twenty minutes for the laundry.",
+    "muyu_d02_t03.wav": "What timers do I have?",
+    "muyu_d02_t04.wav": "Cancel the eggs timer.",
+    "muyu_d03_t01.wav": "Remind me to water the plants.",
+    "muyu_d03_t02.wav": "Six in the evening.",
+    "muyu_d03_t03.wav": "What reminders do I have?",
+    "muyu_d04_t01.wav": "What time does the cafe close on Saturdays?",
+    "muyu_d04_t02.wav": "Where can I print, and how much is it?",
+    "muyu_d04_t03.wav": "Is there a swimming pool?",
+    "muyu_d05_t01.wav": "I need a room on Thursday afternoon.",
+    "muyu_d05_t02.wav": "Five.",
+    "muyu_d05_t03.wav": "A projector.",
+    "muyu_d05_t04.wav": "Yes, under the name Sam.",
+    "muyu_d06_t01.wav": "Can I get a room for fifteen people with a whiteboard?",
+    "muyu_d06_t02.wav": "Maple Hall is fine. Wednesday at two.",
+    "muyu_d06_t03.wav": "Yes, the name is Jordan."
   }
 }
