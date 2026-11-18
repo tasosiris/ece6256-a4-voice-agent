@@ -19,6 +19,8 @@ TENS = "zero ten twenty thirty forty fifty sixty seventy eighty ninety".split()
 
 NUMBER_WORDS = {word: value for value, word in enumerate(ONES)}
 NUMBER_WORDS.update({word: value * 10 for value, word in enumerate(TENS) if value >= 2})
+# How Whisper spells an accented "five".
+NUMBER_WORDS["fife"] = 5
 
 # "one" is a number only next to these; elsewhere it is a pronoun ("the eggs one", "which one").
 WORDS_BEFORE_A_COUNT = {"at", "for", "to", "it", "just", "only", "add", "another", "about"}
@@ -66,6 +68,8 @@ def normalize(text: str) -> str:
     """Lower-case words with numbers as digits: "Four-thirty p.m." -> "4 30 pm"."""
     text = text.lower().replace("-", " ").replace("’", "'")
     text = re.sub(r"\b([ap])\.? ?m\b\.?", r"\1m", text)
+    # Whisper sometimes writes a spoken number as an ordinal: "6th in the evening".
+    text = re.sub(r"\b(\d+)(?:st|nd|rd|th)\b", r"\1", text)
     words = re.findall(r"\d+(?:[:.]\d+)?|[a-z']+", text)
     out = []
     index = 0
