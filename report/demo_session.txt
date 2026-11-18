@@ -1,0 +1,82 @@
+Terminal output of the live demo session shown in the demo video: push-to-talk for three tasks,
+then barge-in, on a MacBook's own speakers and microphone (2026-11-18).
+
+$ python3 demo.py --barge-in --llm-model llama3.1:8b --llm-base-url http://127.0.0.1:11434/v1
+agent: asr small.en on cpu, tts en_US-lessac-medium.onnx at 22050 Hz, llm llama3.1:8b, 12 threads
+
+Setting up barge-in: please stay quiet while I say one sentence.
+
+Task 1 of 4: a timer.
+
+SAY:  Set a timer for five minutes for the eggs.
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   Set the timer for 5 minutes for the eggs
+agent: Five minutes for the eggs, starting now.
+(2801 ms to first audio)
+
+SAY:  How long is left?
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   How long is left?
+agent: About four minutes left on the eggs timer.
+(2717 ms to first audio)
+
+Done. Task 2 of 4: a lookup question.
+
+SAY:  What time does the cafe close on Saturdays?
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   What time does the cafe close on Saturdays?
+agent: The Corner Cup cafe closes at two in the afternoon on Saturdays.
+(3312 ms to first audio)
+
+Done. Task 3 of 4: a room booking.
+
+SAY:  I need a room on Thursday afternoon.
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   I need a room on Thursday afternoon.
+agent: How many people?
+(2481 ms to first audio)
+
+SAY:  Five.
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   5
+agent: Do you need any equipment?
+(2637 ms to first audio)
+
+SAY:  A projector.
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   A Projector
+agent: Cedar Room on the first floor is free on Thursday at two in the afternoon. It holds eight and has a projector. Shall I book it?
+(3210 ms to first audio)
+
+SAY:  Yes, under the name Sam.
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   Yes, under the name Sam
+agent: Booked. Cedar Room, Thursday at two in the afternoon, for Sam.
+(2801 ms to first audio)
+
+Done. Task 4 of 4: talking over the agent.
+
+SAY:  Where can I print, and how much is it?
+      then, while the agent is still answering, say over it (no key press):
+      Actually, what time does the cafe close on Saturdays?
+[Enter to talk, n = new conversation, q = quit] 
+listening... [Enter when done] 
+you:   Where can I print and how much is it?
+agent: The printing station is on the second floor. Black and white pages cost ten cents and color pages cost fifty cents.
+(3017 ms to first audio)
+-- you talked over the agent: it stopped and is answering that now --
+you:   Actually, what time does the cafe close on Saturdays?
+agent: The Corner Cup cafe closes at two in the afternoon on Saturdays.
+(3509 ms to first audio)
+
+All 4 tasks shown. Type q + Enter to quit.
+
+The "agent:" line of the interrupted turn is the full reply the model wrote. Only its first words
+("The printing station") were spoken before the interruption stopped the speech.
