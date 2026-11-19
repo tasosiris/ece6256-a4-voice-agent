@@ -12,7 +12,7 @@
 - **LLM, call 2:** streamed. It repeats the reply from the task logic, or for a lookup question it answers from the knowledge base.
 - **TTS:** Piper starts speaking while call 2 is still streaming. We cut the text at the end of each sentence, and the first piece also at the first comma, so audio starts sooner.
 
-Settings that affect time: Whisper and the LLM run on the GPU and Piper runs on the CPU. Both CPU libraries are set to the 8 cores of the job. The full knowledge base goes into the prompt only on lookup turns. Before the first timed turn we run every stage twice as a warm-up. The live demo also has barge-in (`demo.py --barge-in`): it learns the echo of its own voice at start-up and stops speaking when the user talks over it.
+Settings that affect time: Whisper and the LLM run on the GPU and Piper runs on the CPU. The two libraries that use CPU threads (CTranslate2 for Whisper, ONNX Runtime for Piper) are set to the 8 cores of the job. The full knowledge base goes into the prompt only on lookup turns. Before the first timed turn we run every stage twice as a warm-up. The live demo also has barge-in (`demo.py --barge-in`): it learns the echo of its own voice at start-up and stops speaking when the user talks over it.
 
 ## 2. The latency waterfall
 
@@ -41,7 +41,7 @@ We also added our own stamps to the trace to split the stages further:
 
 **How I treat stages that overlap:** `llm_first_token` is the first token of call 2, the one that is spoken. So call 1 is counted inside "LLM start". Piper starts on the first piece while the LLM is still writing, and the wait for that first piece is counted inside "Speech start". The rest of the LLM stream is reported in the last row but it does not delay the first audio.
 
-**How to recompute these numbers:** `python3 waterfall.py --trace run_output/7153569/trace.jsonl --figure report/waterfall.png`
+**How to recompute these numbers:** `python3 waterfall.py --trace run_output/7153569/trace.jsonl` prints both tables; adding `--figure report/waterfall.png` redraws the figure.
 
 ## 3. Word error rate on our own voices
 
@@ -62,7 +62,7 @@ The errors also broke the tasks. All 6 of Tasos's dialogues worked, but only 2 o
 
 **Why:** There are two reasons and we measured both. First, Piper runs on the CPU while Whisper and the LLM use the GPU, and it needs 56 ms to make the first audio. Second, Piper cannot start until the LLM has finished the first piece of text, which takes 49 ms. Longer first pieces are slower on both counts: the three slowest turns (341 to 402 ms) are the long room proposals, where the first piece took 61 to 103 ms to arrive and 122 to 166 ms to synthesize. The lookup turns show the same thing. There the LLM writes its own answer, the first piece takes 73 ms, and the median TTFA is 277 ms against 234 ms for the other turns. Speech start is also the least stable stage: three runs of the same code gave 96, 100 and 114 ms (TTFA p50 of 232, 235 and 260 ms), while ASR and LLM start moved by 3 ms at most. Without the cut at the first comma (`run_output/7153831/`) it was 119 ms, which is higher than all three but too close to that spread to prove much.
 
-**The fix I would ship next:** For timers, reminders and bookings the reply is already written by our code before call 2 starts, and the LLM only repeats it. So we would send the first sentence straight to Piper and not wait for the LLM. That removes the first token (14 ms) and the wait for the first piece (37 ms on these turns), about 50 ms on 34 of our 40 turns. We expect the p50 to drop from 235 ms to roughly 185 ms, and lookup turns would stay the same. We did not measure this, it is an estimate from the trace.
+**The fix I would ship next:** For timers, reminders and bookings the reply is already written by our code before call 2 starts, and the LLM only repeats it. So we would send the first sentence straight to Piper and not wait for the LLM. That removes the first token (14 ms) and the wait for the first piece (37 ms on these turns), about 50 ms on 34 of our 40 turns. We expect the p50 to drop from 235 ms to roughly 185 ms, and lookup turns would stay the same. We did not measure this; it is an estimate from the trace.
 
 **One thing I tried that did not help:** We set Whisper's beam size to 1 instead of 5, hoping for faster ASR (`run_output/7153830/`). It saved almost nothing: ASR went from 36 to 34 ms and TTFA from 235 to 230 ms. Three runs of the same setting gave a TTFA p50 of 232, 235 and 260 ms, so a difference this small is inside the normal variation between runs. But the WER got worse for both of us, 3.4% to 5.9% for Tasos and 21.2% to 24.6% for Muyu. ASR is only 15% of the TTFA anyway, so we kept beam size 5.
 
@@ -86,9 +86,9 @@ The job plays the 40 recordings in `recordings/` and writes `run_output/<job id>
 
 **Tools used:** Claude Code (Anthropic), model Claude Fable 5.2.
 
-**What for:** AI assisted with writing the code: the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`, `barge_in.py`), the tests, the pinned requirements and the README. It also helped build the image, run the jobs on PACE-ICE and draw the figure. We also used AI to help draft and edit the report and to check and correct grammar.
+**What for:** AI assisted with writing the code: the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`, `barge_in.py`), the tests, the pinned requirements and the README. It also helped build the image, run the jobs on PACE-ICE and draw the figure.
 
-One design point a reader should know: for timers, reminders and bookings the reply text is produced by code and the LLM repeats it. It repeated it word for word in 34 of 34 such turns in the reported run.
+One design point a reader should know: for timers, reminders and bookings the reply text is produced by code and the LLM repeats it. The LLM repeated it word for word in 34 of 34 such turns in the reported run.
 
 **What I wrote or decided myself:** We recorded the 40 utterances and the demo video ourselves. We decided what to build and what to submit, including keeping the 8B model and beam size 5, and we reviewed and edited the text of this report.
 
