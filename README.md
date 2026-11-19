@@ -54,7 +54,7 @@ the shared Hugging Face cache, and writes:
 - `a4-agent-<job id>.out`: every transcript and reply, the latency table, and the WER if
   `<recordings>/references.json` exists
 
-The whole job takes 4 to 8 minutes for the 40 recorded turns, most of it model loading.
+The whole job takes 4 to 10 minutes for the 40 recorded turns, most of it model loading.
 
 ### How recordings become conversations
 
@@ -73,7 +73,8 @@ python3 wer/score_wer.py --trace run_output/<job id>/trace.jsonl --references re
 The run the report uses is `run_output/7153569/` (trace, spoken replies, and the job's log as
 `job.out`), measured at the commit before the one that added it; `report/waterfall.png` is drawn from it.
 
-Four more runs of the same 40 recordings:
+Five more runs of the same 40 recordings. The three with nothing changed gave a p50 TTFA of 232, 235 and
+260 ms, which is the variation from run to run:
 
 | Run | Change | Command |
 |---|---|---|
@@ -81,6 +82,7 @@ Four more runs of the same 40 recordings:
 | `run_output/7153831/` | first piece not cut at a comma | `sbatch --export=ALL,AGENT_ARGS="--no-clause-split" run_agent.sbatch` |
 | `run_output/7153832/` | Llama 3.2 3B | `sbatch --export=ALL,LLM_MODEL=meta-llama/Llama-3.2-3B-Instruct run_agent.sbatch` |
 | `run_output/7161061/` | nothing: a fresh clone and a fresh image build, as a reproduction check | `sbatch run_agent.sbatch` |
+| `run_output/7165204/` | nothing: a fresh clone of the submitted commit | `sbatch run_agent.sbatch` |
 
 `waterfall.py` lists every turn the checker rejects, prints the p50 and p95 table of the report from
 `voice_kit.summarize_stages`, splits the LLM-side stages with the agent's extra stamps, and draws
