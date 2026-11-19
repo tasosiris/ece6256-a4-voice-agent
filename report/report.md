@@ -41,7 +41,11 @@ We also added our own stamps to the trace to split the stages further:
 
 **How I treat stages that overlap:** `llm_first_token` is the first token of call 2, the one that is spoken. So call 1 is counted inside "LLM start". Piper starts on the first piece while the LLM is still writing, and the wait for that first piece is counted inside "Speech start". The rest of the LLM stream is reported in the last row but it does not delay the first audio.
 
-**How to recompute these numbers:** `python3 waterfall.py --trace run_output/7153569/trace.jsonl` prints both tables; adding `--figure report/waterfall.png` redraws the figure.
+**How to recompute these numbers:** the command below prints both tables; adding `--figure report/waterfall.png` redraws the figure.
+
+```bash
+python3 waterfall.py --trace run_output/7153569/trace.jsonl
+```
 
 ## 3. Word error rate on our own voices
 
