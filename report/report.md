@@ -86,7 +86,7 @@ The job plays the 40 recordings in `recordings/` and writes `run_output/<job id>
 
 **Tools used:** Claude Code (Anthropic), model Claude Fable 5.2.
 
-**What for:** AI assisted with writing the code. Claude Code wrote most of it under our direction: the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`, `barge_in.py`), the tests, the pinned requirements and the README. It also built the image, ran the jobs on PACE-ICE and drew the figure. In the report we used AI to draft sections 1, 2 and 5 and fill in the tables, to draft sections 3 and 4 from the trace, which we then checked against the numbers and edited, and to check and correct grammar.
+**What for:** AI assisted with writing the code: the agent (`agent.py`, `dialogue.py`, `nlu.py`), the scripts (`waterfall.py`, `record.py`, `demo.py`, `barge_in.py`), the tests, the pinned requirements and the README. It also helped build the image, run the jobs on PACE-ICE and draw the figure. We also used AI to help draft and edit the report and to check and correct grammar.
 
 One design point a reader should know: for timers, reminders and bookings the reply text is produced by code and the LLM repeats it. It repeated it word for word in 34 of 34 such turns in the reported run.
 
